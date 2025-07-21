@@ -137,7 +137,7 @@
   </div>
   <script src="workflows-list.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@n8n_io/n8n-demo-component/n8n-demo.bundled.js"></script>
- <script>
+<script>
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 // 메뉴 생성
@@ -172,7 +172,7 @@
             });
             
             // 폴더 순서 정의 (원하는 순서대로 배열에 추가)
-            const folderOrder = ['openai-analytics', 'mcp_server'];
+            const folderOrder = ['openai-analytics', 'mcp_server', 'english'];
             
             // 각 폴더별 메뉴 그룹 생성 (정의된 순서대로)
             folderOrder.forEach(folderName => {
@@ -190,7 +190,12 @@
                         case 'openai-analytics':
                             displayName = 'OpenAI Analytics';
                             break;
-                
+                        case 'mcp_server':
+                            displayName = 'MCP 서버';
+                            break;
+                        case 'english':
+                            displayName = '영어 학습';
+                            break;
                         default:
                             displayName = folderName.replace(/-/g, ' ');
                     }
