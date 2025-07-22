@@ -426,7 +426,46 @@
             `;
         }
     </script>
-    <!-- 팝업 모달 -->
+    <!-- 왼쪽 메뉴 하단에 추가 -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    createMenu(); // 기존 코드
+    if (WORKFLOWS && WORKFLOWS.length > 0) {
+      loadWorkflow(WORKFLOWS[0]);
+    }
+
+    // ✅ 정적 메뉴 항목 생성 (팝업용)
+    const staticItems = [
+      { title: '사이트 소개', content: 'SuperSimple SEO는 자동화 템플릿을 공유하는 플랫폼입니다.' },
+      { title: '문의하기', content: '이메일: support@supersimpleseo.net / 유튜브 채널로 연락주세요.' }
+    ];
+
+    const menu = document.getElementById('workflow-menu');
+    staticItems.forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'nav-item';
+      li.textContent = item.title;
+      li.addEventListener('click', () => {
+        showPopup(item.title, item.content);
+      });
+      menu.appendChild(li);
+    });
+  });
+
+  // ✅ 팝업 표시 함수
+  function showPopup(title, content) {
+    const modal = document.getElementById('popup-modal');
+    document.getElementById('popup-title').textContent = title;
+    document.getElementById('popup-content').textContent = content;
+    modal.style.display = 'flex';
+  }
+
+  function closePopup() {
+    document.getElementById('popup-modal').style.display = 'none';
+  }
+</script>
+
+<!-- ✅ 팝업 HTML (body 끝에 삽입) -->
 <div id="popup-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;">
   <div style="background:#23272a;padding:30px;border-radius:12px;max-width:500px;width:90%;color:#e6f7f7;box-shadow:0 0 20px rgba(0,0,0,0.4);position:relative;">
     <h2 id="popup-title" style="margin-top:0;color:#3fe0b6;"></h2>
