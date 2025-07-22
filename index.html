@@ -237,222 +237,7 @@
         </footer>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                // 메뉴 생성
-                createMenu();
-                
-                // 기본적으로 첫 번째 워크플로우 로드
-                if (WORKFLOWS && WORKFLOWS.length > 0) {
-                    loadWorkflow(WORKFLOWS[0]);
-                } else {
-                    showError('사용 가능한 워크플로우가 없습니다.');
-                }
-            } catch (error) {
-                console.error('초기화 중 오류 발생:', error);
-                showError('워크플로우 목록을 로드하는 중 오류가 발생했습니다: ' + error.message);
-            }
-        });
-
-        // 워크플로우 목록을 폴더별로 정리하여 메뉴 생성
-        function createMenu() {
-            const workflowMenu = document.getElementById('workflow-menu');
-            workflowMenu.innerHTML = '';
-            
-            // 폴더별로 워크플로우 그룹화
-            const folderGroups = {};
-            
-            WORKFLOWS.forEach(workflow => {
-                const folderName = workflow.folder || 'other';
-                if (!folderGroups[folderName]) {
-                    folderGroups[folderName] = [];
-                }
-                folderGroups[folderName].push(workflow);
-            });
-            
-            // 폴더 순서 정의 (원하는 순서대로 배열에 추가)
-            const folderOrder = ['openai-analytics', 'mcp_server', 'english'];
-            
-            // 각 폴더별 메뉴 그룹 생성 (정의된 순서대로)
-            folderOrder.forEach(folderName => {
-                if (folderGroups[folderName]) {
-                    const folderGroup = document.createElement('div');
-                    folderGroup.className = 'folder-group';
-                    
-                    // 폴더 제목 추가
-                    const folderTitle = document.createElement('div');
-                    folderTitle.className = 'folder-title';
-                    
-                    // 폴더명을 보기 좋게 변환
-                    let displayName = folderName;
-                    switch(folderName) {
-                        case 'openai-analytics':
-                            displayName = 'OpenAI Analytics';
-                            break;
-                        case 'mcp_server':
-                            displayName = 'MCP 서버';
-                            break;
-                        case 'english':
-                            displayName = '영어 학습';
-                            break;
-                        default:
-                            displayName = folderName.replace(/-/g, ' ');
-                    }
-                    
-                    folderTitle.textContent = displayName;
-                    folderGroup.appendChild(folderTitle);
-                    
-                    // 폴더 내 워크플로우 목록 추가
-                    const workflows = folderGroups[folderName];
-                    workflows.forEach(workflow => {
-                        const menuItem = document.createElement('li');
-                        menuItem.className = 'nav-item';
-                        menuItem.dataset.id = workflow.id;
-                        menuItem.textContent = workflow.title;
-                        
-                        menuItem.addEventListener('click', () => {
-                            loadWorkflow(workflow);
-                            
-                            // 활성 메뉴 아이템 업데이트
-                            document.querySelectorAll('.nav-item').forEach(item => {
-                                item.classList.remove('active');
-                            });
-                            menuItem.classList.add('active');
-                        });
-                        
-                        folderGroup.appendChild(menuItem);
-                    });
-                    
-                    workflowMenu.appendChild(folderGroup);
-                }
-            });
-            
-            // 정의되지 않은 폴더가 있다면 마지막에 추가
-            Object.keys(folderGroups).forEach(folderName => {
-                if (!folderOrder.includes(folderName)) {
-                    const folderGroup = document.createElement('div');
-                    folderGroup.className = 'folder-group';
-                    
-                    const folderTitle = document.createElement('div');
-                    folderTitle.className = 'folder-title';
-                    folderTitle.textContent = folderName.replace(/-/g, ' ');
-                    folderGroup.appendChild(folderTitle);
-                    
-                    const workflows = folderGroups[folderName];
-                    workflows.forEach(workflow => {
-                        const menuItem = document.createElement('li');
-                        menuItem.className = 'nav-item';
-                        menuItem.dataset.id = workflow.id;
-                        menuItem.textContent = workflow.title;
-                        
-                        menuItem.addEventListener('click', () => {
-                            loadWorkflow(workflow);
-                            
-                            document.querySelectorAll('.nav-item').forEach(item => {
-                                item.classList.remove('active');
-                            });
-                            menuItem.classList.add('active');
-                        });
-                        
-                        folderGroup.appendChild(menuItem);
-                    });
-                    
-                    workflowMenu.appendChild(folderGroup);
-                }
-            });
-            
-            // 첫 번째 항목을 활성화
-            if (workflowMenu.querySelector('.nav-item')) {
-                workflowMenu.querySelector('.nav-item').classList.add('active');
-            }
-        }
-
-        async function loadWorkflow(workflow) {
-            try {
-                // 로딩 표시
-                document.getElementById('n8n-demo-container').innerHTML = `
-                    <div class="loading">
-                        <div class="loading-spinner"></div>
-                        <p>워크플로우를 로드하는 중...</p>
-                    </div>
-                `;
-                
-                // 타이틀과 설명 업데이트
-                document.getElementById('workflow-title').textContent = workflow.title;
-                document.getElementById('workflow-description').textContent = workflow.description;
-                
-                // 워크플로우 JSON 파일 경로
-                const jsonPath = `workflows/${workflow.folder}/${workflow.filename}`;
-                const response = await fetch(jsonPath);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP 오류: ${response.status}`);
-                }
-                
-                const workflowData = await response.json();
-                
-                // n8n-demo 컴포넌트 생성
-                document.getElementById('n8n-demo-container').innerHTML = '';
-                const container = document.getElementById('n8n-demo-container');
-                
-                const demoElement = document.createElement('n8n-demo');
-                
-                // 속성 설정
-                demoElement.setAttribute('workflow', JSON.stringify(workflowData));
-                demoElement.setAttribute('frame', 'false');
-                demoElement.setAttribute('clicktointeract', 'true');
-                demoElement.setAttribute('theme', 'dark');
-                
-                // 프로퍼티 설정
-                demoElement.showPreview = true;
-                demoElement.showCode = true;
-                // demoElement.fullscreen = true;
-                demoElement.insideIframe = true;
-                
-                container.appendChild(demoElement);
-            } catch (error) {
-                console.error('워크플로우 데이터를 가져오는 중 오류 발생:', error);
-                showError(`워크플로우 데이터를 가져오는 중 오류가 발생했습니다: ${error.message}<br>파일 경로를 확인해주세요: ${jsonPath}`);
-            }
-        }
-        
-        function showError(message) {
-            document.getElementById('n8n-demo-container').innerHTML = `
-                <div style="padding: 20px; background-color: #ffdddd; border-radius: 5px; margin-top: 20px;">
-                    <h3>오류 발생</h3>
-                    <p>${message}</p>
-                </div>
-            `;
-        }
-    </script>
-    <!-- 왼쪽 메뉴 하단에 추가 -->
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    createMenu(); // 기존 코드
-    if (WORKFLOWS && WORKFLOWS.length > 0) {
-      loadWorkflow(WORKFLOWS[0]);
-    }
-
-    // ✅ 정적 메뉴 항목 생성 (팝업용)
-    const staticItems = [
-      { title: '사이트 소개', content: 'SuperSimple SEO는 자동화 템플릿을 공유하는 플랫폼입니다.' },
-      { title: '문의하기', content: '이메일: support@supersimpleseo.net / 유튜브 채널로 연락주세요.' }
-    ];
-
-    const menu = document.getElementById('workflow-menu');
-    staticItems.forEach(item => {
-      const li = document.createElement('li');
-      li.className = 'nav-item';
-      li.textContent = item.title;
-      li.addEventListener('click', () => {
-        showPopup(item.title, item.content);
-      });
-      menu.appendChild(li);
-    });
-  });
-
-  // ✅ 팝업 표시 함수
+   <script>
   function showPopup(title, content) {
     const modal = document.getElementById('popup-modal');
     document.getElementById('popup-title').textContent = title;
@@ -463,7 +248,117 @@
   function closePopup() {
     document.getElementById('popup-modal').style.display = 'none';
   }
+
+  function createMenu() {
+    const workflowMenu = document.getElementById('workflow-menu');
+    workflowMenu.innerHTML = '';
+
+    const folderGroups = {};
+    WORKFLOWS.forEach(workflow => {
+      const folderName = workflow.folder || 'other';
+      if (!folderGroups[folderName]) folderGroups[folderName] = [];
+      folderGroups[folderName].push(workflow);
+    });
+
+    const folderOrder = ['openai-analytics', 'mcp_server', 'english'];
+    folderOrder.forEach(folderName => {
+      if (folderGroups[folderName]) {
+        const folderGroup = document.createElement('div');
+        folderGroup.className = 'folder-group';
+        const folderTitle = document.createElement('div');
+        folderTitle.className = 'folder-title';
+        folderTitle.textContent = {
+          'openai-analytics': 'OpenAI Analytics',
+          'mcp_server': 'MCP 서버',
+          'english': '영어 학습'
+        }[folderName] || folderName.replace(/-/g, ' ');
+        folderGroup.appendChild(folderTitle);
+
+        folderGroups[folderName].forEach(workflow => {
+          const menuItem = document.createElement('li');
+          menuItem.className = 'nav-item';
+          menuItem.dataset.id = workflow.id;
+          menuItem.textContent = workflow.title;
+          menuItem.addEventListener('click', () => {
+            loadWorkflow(workflow);
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            menuItem.classList.add('active');
+          });
+          folderGroup.appendChild(menuItem);
+        });
+
+        workflowMenu.appendChild(folderGroup);
+      }
+    });
+
+    // static 팝업 항목
+    const staticItems = [
+      { title: '사이트 소개', content: 'SuperSimple SEO는 자동화 템플릿을 공유하는 플랫폼입니다.' },
+      { title: '문의하기', content: '이메일: support@supersimpleseo.net / 유튜브 채널로 연락주세요.' }
+    ];
+    staticItems.forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'nav-item';
+      li.textContent = item.title;
+      li.addEventListener('click', () => showPopup(item.title, item.content));
+      workflowMenu.appendChild(li);
+    });
+
+    const first = workflowMenu.querySelector('.nav-item');
+    if (first) first.classList.add('active');
+  }
+
+  async function loadWorkflow(workflow) {
+    try {
+      document.getElementById('n8n-demo-container').innerHTML = `
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <p>워크플로우를 로드하는 중...</p>
+        </div>
+      `;
+
+      document.getElementById('workflow-title').textContent = workflow.title;
+      document.getElementById('workflow-description').textContent = workflow.description;
+      const jsonPath = `workflows/${workflow.folder}/${workflow.filename}`;
+      const response = await fetch(jsonPath);
+      if (!response.ok) throw new Error(`HTTP 오류: ${response.status}`);
+      const workflowData = await response.json();
+
+      const container = document.getElementById('n8n-demo-container');
+      container.innerHTML = '';
+      const demoElement = document.createElement('n8n-demo');
+      demoElement.setAttribute('workflow', JSON.stringify(workflowData));
+      demoElement.setAttribute('frame', 'false');
+      demoElement.setAttribute('clicktointeract', 'true');
+      demoElement.setAttribute('theme', 'dark');
+      demoElement.showPreview = true;
+      demoElement.showCode = true;
+      demoElement.insideIframe = true;
+      container.appendChild(demoElement);
+    } catch (error) {
+      showError(`워크플로우 데이터를 가져오는 중 오류가 발생했습니다: ${error.message}`);
+    }
+  }
+
+  function showError(message) {
+    document.getElementById('n8n-demo-container').innerHTML = `
+      <div style="padding: 20px; background-color: #ffdddd; border-radius: 5px; margin-top: 20px;">
+        <h3>오류 발생</h3>
+        <p>${message}</p>
+      </div>
+    `;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      createMenu();
+      if (WORKFLOWS && WORKFLOWS.length > 0) loadWorkflow(WORKFLOWS[0]);
+    } catch (error) {
+      showError(error.message);
+    }
+  });
 </script>
+
 
 <!-- ✅ 팝업 HTML (body 끝에 삽입) -->
 <div id="popup-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;">
