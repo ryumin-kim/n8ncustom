@@ -357,6 +357,34 @@
       showError(error.message);
     }
   });
+         function showPopupOnce() {
+    const shown = localStorage.getItem('popupShown');
+    if (!shown) {
+      document.getElementById('popup-modal').style.display = 'flex';
+      localStorage.setItem('popupShown', 'true');
+    }
+  }
+
+  function closePopup() {
+    document.getElementById('popup-modal').style.display = 'none';
+  }
+
+  function submitEmail() {
+    const email = document.getElementById('email-input').value;
+    if (!email || !email.includes('@')) {
+      alert('올바른 이메일을 입력해주세요.');
+      return;
+    }
+    // TODO: 여기에 이메일 백엔드 전송 API 호출
+    console.log('수집된 이메일:', email);
+    closePopup();
+    alert('감사합니다! 템플릿을 곧 보내드릴게요.');
+  }
+
+  // 사이트 진입 시 자동 실행
+  document.addEventListener('DOMContentLoaded', () => {
+    showPopupOnce();
+  });
 </script>
 
 
